@@ -287,6 +287,7 @@ typedef struct{
 	itlb_systemcore itlb;
 	icache_systemcore icache;
 	dtlb_systemcore dtlb;
+	dtlb_systemcore stlb;
 	dcache_systemcore dcache;
 	BTB_systemcore BTB;
 

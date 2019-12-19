@@ -42,6 +42,8 @@
 #include "core.h"
 //#include "globalvar.h"
 
+#define VAR(v) cout << #v << " : " << std::to_string(v) << std::endl;
+
 InstFetchU::InstFetchU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_)
 :XML(XML_interface),
  ithCore(ithCore_),
@@ -940,6 +942,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
  coredynp(dyn_p_),
  itlb(0),
  dtlb(0),
+ stlb(0),
  exist(exist_)
 {
 	  if (!exist) return;
@@ -1005,6 +1008,9 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  area.set_area(area.get_area()+ dtlb->local_result.area);
 	  //output_data_csv(dtlb.tlb.local_result);
 
+	  stlb = new ArrayST(&interface_ip, "STLB", Core_device, coredynp.opt_local, coredynp.core_ty);
+	  stlb->area.set_area(stlb->area.get_area()+ stlb->local_result.area);
+	  area.set_area(area.get_area()+ stlb->local_result.area);
 }
 
 RegFU::RegFU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_,bool exist_)
@@ -2184,14 +2190,24 @@ void InstFetchU::computeEnergy(bool is_tdp)
     	BTB->power_t.reset();
     }
 
+    // VAR(icache.missb->local_result.power.searchOp.dynamic)
+    // VAR(icache.missb->stats_t.readAc.access)
+    // VAR(icache.ifb->local_result.power.searchOp.dynamic)
+    VAR(icache.caches->stats_t.readAc.access)
+    VAR(icache.caches->stats_t.readAc.hit)
+    VAR(icache.caches->stats_t.readAc.miss)
+    // cache
     icache.power_t.readOp.dynamic	+= (icache.caches->stats_t.readAc.hit*icache.caches->local_result.power.readOp.dynamic+
     		//icache.caches->stats_t.readAc.miss*icache.caches->local_result.tag_array2->power.readOp.dynamic+
     		icache.caches->stats_t.readAc.miss*icache.caches->local_result.power.readOp.dynamic+ //assume tag data accessed in parallel
     		icache.caches->stats_t.readAc.miss*icache.caches->local_result.power.writeOp.dynamic); //read miss in Icache cause a write to Icache
+    // miss buffer
     icache.power_t.readOp.dynamic	+=  icache.missb->stats_t.readAc.access*icache.missb->local_result.power.searchOp.dynamic +
             icache.missb->stats_t.writeAc.access*icache.missb->local_result.power.writeOp.dynamic;//each access to missb involves a CAM and a write
+    // fill buffer
     icache.power_t.readOp.dynamic	+=  icache.ifb->stats_t.readAc.access*icache.ifb->local_result.power.searchOp.dynamic +
             icache.ifb->stats_t.writeAc.access*icache.ifb->local_result.power.writeOp.dynamic;
+    // prefetch buffer
     icache.power_t.readOp.dynamic	+=  icache.prefetchb->stats_t.readAc.access*icache.prefetchb->local_result.power.searchOp.dynamic +
             icache.prefetchb->stats_t.writeAc.access*icache.prefetchb->local_result.power.writeOp.dynamic;
 
@@ -3299,12 +3315,22 @@ void LoadStoreU::computeEnergy(bool is_tdp)
     	dcache.power_t.readOp.dynamic	+= dcache.caches->stats_t.writeAc.miss*dcache.caches->local_result.power.writeOp.dynamic;
     }
 
+    //VAR(dcache.missb->local_result.power.searchOp.dynamic)
+    //VAR(dcache.missb->stats_t.readAc.access)
+    //VAR(dcache.ifb->local_result.power.searchOp.dynamic)
+    VAR(dcache.caches->stats_t.readAc.access)
+    VAR(dcache.caches->stats_t.readAc.miss)
+    VAR(dcache.caches->stats_t.readAc.hit)
+    // miss buffer
     dcache.power_t.readOp.dynamic	+=  dcache.missb->stats_t.readAc.access*dcache.missb->local_result.power.searchOp.dynamic +
             dcache.missb->stats_t.writeAc.access*dcache.missb->local_result.power.writeOp.dynamic;//each access to missb involves a CAM and a write
+    // fill buffer
     dcache.power_t.readOp.dynamic	+=  dcache.ifb->stats_t.readAc.access*dcache.ifb->local_result.power.searchOp.dynamic +
             dcache.ifb->stats_t.writeAc.access*dcache.ifb->local_result.power.writeOp.dynamic;
+    // prefetch buffer
     dcache.power_t.readOp.dynamic	+=  dcache.prefetchb->stats_t.readAc.access*dcache.prefetchb->local_result.power.searchOp.dynamic +
             dcache.prefetchb->stats_t.writeAc.access*dcache.prefetchb->local_result.power.writeOp.dynamic;
+
     if (cache_p==Write_back)
     {
     	dcache.power_t.readOp.dynamic	+=  dcache.wbb->stats_t.readAc.access*dcache.wbb->local_result.power.searchOp.dynamic
@@ -3483,6 +3509,13 @@ void MemManU::computeEnergy(bool is_tdp)
     	dtlb->stats_t.readAc.miss    = 0;
     	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
     	dtlb->tdp_stats = dtlb->stats_t;
+
+        if(stlb) {
+            stlb->stats_t.readAc.access  = stlb->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+            stlb->stats_t.readAc.miss    = 0;
+            stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
+            stlb->tdp_stats = stlb->stats_t;
+        }
      }
     else
     {
@@ -3496,27 +3529,54 @@ void MemManU::computeEnergy(bool is_tdp)
     	dtlb->stats_t.readAc.miss    = XML->sys.core[ithCore].dtlb.total_misses;
     	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
     	dtlb->rtp_stats = dtlb->stats_t;
+
+        if(stlb) {
+            stlb->stats_t.readAc.access  = XML->sys.core[ithCore].stlb.total_accesses;
+            stlb->stats_t.readAc.miss    = XML->sys.core[ithCore].stlb.total_misses;
+            stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
+            stlb->rtp_stats = stlb->stats_t;
+            cout << "stlb total accesses " << stlb->stats_t.readAc.access << endl;
+            cout << "stlb total misses " << stlb->stats_t.readAc.miss << endl;
+            cout << "stlb total hit " << stlb->stats_t.readAc.hit << endl;
+        }
     }
 
     itlb->power_t.reset();
     dtlb->power_t.reset();
+    if(stlb) {
+        stlb->power_t.reset();
+    }
+    VAR(itlb->local_result.power.searchOp.dynamic)
+    VAR(dtlb->local_result.power.searchOp.dynamic)
 	itlb->power_t.readOp.dynamic +=  itlb->stats_t.readAc.access*itlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
 	                      +itlb->stats_t.readAc.miss*itlb->local_result.power.writeOp.dynamic;
 	dtlb->power_t.readOp.dynamic +=  dtlb->stats_t.readAc.access*dtlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
 	                      +dtlb->stats_t.readAc.miss*dtlb->local_result.power.writeOp.dynamic;
+    if(stlb) {
+        stlb->power_t.readOp.dynamic +=  stlb->stats_t.readAc.access*stlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
+            +stlb->stats_t.readAc.miss*stlb->local_result.power.writeOp.dynamic;
+    }
 
-	if (is_tdp)
-	    {
-		itlb->power = itlb->power_t + itlb->local_result.power *pppm_lkg;
-		dtlb->power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
-		power     = power + itlb->power + dtlb->power;
-	    }
-	    else
-	    {
-			itlb->rt_power = itlb->power_t + itlb->local_result.power *pppm_lkg;
-			dtlb->rt_power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
-			rt_power     = rt_power + itlb->rt_power + dtlb->rt_power;
-	    }
+    if (is_tdp)
+    {
+        itlb->power = itlb->power_t + itlb->local_result.power *pppm_lkg;
+        dtlb->power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
+        power = power + itlb->power + dtlb->power;
+        if(stlb) {
+            stlb->power = stlb->power_t + stlb->local_result.power *pppm_lkg;
+            power = power + stlb->power;
+        }
+    }
+    else
+    {
+        itlb->rt_power = itlb->power_t + itlb->local_result.power *pppm_lkg;
+        dtlb->rt_power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
+        rt_power = rt_power + itlb->rt_power + dtlb->rt_power;
+        if(stlb) {
+            stlb->rt_power = stlb->power_t + stlb->local_result.power *pppm_lkg;
+            rt_power = rt_power + stlb->rt_power;
+        }
+    }
 }
 
 void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
@@ -3526,8 +3586,6 @@ void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 	string indent_str_next(indent+2, ' ');
 	bool long_channel = XML->sys.longer_channel_device;
 	bool power_gating = XML->sys.power_gating;
-
-
 
 	if (is_tdp)
 	{
@@ -3551,6 +3609,19 @@ void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 		cout << indent_str_next << "Gate Leakage = " << dtlb->power.readOp.gate_leakage  << " W" << endl;
 		cout << indent_str_next << "Runtime Dynamic = " << dtlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
 		cout <<endl;
+
+        if(stlb) {
+            cout << indent_str<< "Stlb:" << endl;
+            cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
+            cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
+            cout << indent_str_next << "Subthreshold Leakage = "
+                << (long_channel? stlb->power.readOp.longer_channel_leakage:stlb->power.readOp.leakage)  << " W" << endl;
+            if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+                << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
+            cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
+            cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+            cout <<endl;
+        }
 	}
 	else
 	{
@@ -3560,6 +3631,11 @@ void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 		cout << indent_str_next << "Dtlb   Peak Dynamic = " << dtlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
 		cout << indent_str_next << "Dtlb   Subthreshold Leakage = " << dtlb->rt_power.readOp.leakage  << " W" << endl;
 		cout << indent_str_next << "Dtlb   Gate Leakage = " << dtlb->rt_power.readOp.gate_leakage  << " W" << endl;
+        if(stlb) {
+            cout << indent_str_next << "Stlb   Peak Dynamic = " << stlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
+            cout << indent_str_next << "Stlb   Subthreshold Leakage = " << stlb->rt_power.readOp.leakage  << " W" << endl;
+            cout << indent_str_next << "Stlb   Gate Leakage = " << stlb->rt_power.readOp.gate_leakage  << " W" << endl;
+        }
 	}
 
 }
@@ -4230,7 +4306,8 @@ MemManU ::~MemManU(){
 	if (!exist) return;
 	if(itlb) 	               {delete itlb; itlb = 0;}
     if(dtlb) 	               {delete dtlb; dtlb = 0;}
-	}
+    if(stlb) 	               {delete stlb; stlb = 0;}
+}
 
 RegFU ::~RegFU(){
 

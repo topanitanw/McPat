@@ -172,6 +172,7 @@ class MemManU :public Component {
 	double scktRatio, chip_PR_overhead, macro_PR_overhead;
 	ArrayST * itlb;
 	ArrayST * dtlb;
+	ArrayST * stlb;
 	bool exist;
 
 	MemManU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
