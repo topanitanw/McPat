@@ -65,6 +65,7 @@ typedef struct{
 } predictor_systemcore;
 typedef struct{
 	int number_entries;
+	int number_assoc;
 	int cache_policy;//0 no write or write-though with non-write allocate;1 write-back with write-allocate
 	double total_hits;
 	double total_accesses;
@@ -95,6 +96,7 @@ typedef struct{
 typedef struct{
 	//params
 	int number_entries;
+	int number_assoc;
 	int cache_policy;//0 no write or write-though with non-write allocate;1 write-back with write-allocate
 	//stats
 	double total_accesses;

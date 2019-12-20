@@ -961,7 +961,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.tag_w               = tag;
 	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
 	  interface_ip.cache_sz            = XML->sys.core[ithCore].itlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
-	  interface_ip.assoc               = 0;
+	  interface_ip.assoc               = XML->sys.core[ithCore].itlb.number_assoc;
 	  interface_ip.nbanks              = 1;
 	  interface_ip.out_w               = interface_ip.line_sz*8;
 	  interface_ip.access_mode         = 0;
@@ -988,7 +988,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.tag_w               = tag;
 	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
 	  interface_ip.cache_sz            = XML->sys.core[ithCore].dtlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
-	  interface_ip.assoc               = 0;
+	  interface_ip.assoc               = XML->sys.core[ithCore].dtlb.number_assoc;
 	  interface_ip.nbanks              = 1;
 	  interface_ip.out_w               = interface_ip.line_sz*8;
 	  interface_ip.access_mode         = 0;
@@ -1014,7 +1014,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.tag_w               = tag;
 	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
 	  interface_ip.cache_sz            = XML->sys.core[ithCore].stlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
-	  interface_ip.assoc               = 0;
+	  interface_ip.assoc               = 8;//XML->sys.core[ithCore].stlb.number_assoc;
 	  interface_ip.nbanks              = 1;
 	  interface_ip.out_w               = interface_ip.line_sz*8;
 	  interface_ip.access_mode         = 0;
@@ -3556,9 +3556,6 @@ void MemManU::computeEnergy(bool is_tdp)
             stlb->stats_t.readAc.miss    = XML->sys.core[ithCore].stlb.total_misses;
             stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
             stlb->rtp_stats = stlb->stats_t;
-            cout << "stlb total accesses " << stlb->stats_t.readAc.access << endl;
-            cout << "stlb total misses " << stlb->stats_t.readAc.miss << endl;
-            cout << "stlb total hit " << stlb->stats_t.readAc.hit << endl;
         }
     }
 
@@ -3636,7 +3633,7 @@ void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
             cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
             cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
             cout << indent_str_next << "Subthreshold Leakage = "
-                << (long_channel? stlb->power.readOp.longer_channel_leakage:stlb->power.readOp.leakage)  << " W" << endl;
+                << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
             if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
                 << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
             cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;

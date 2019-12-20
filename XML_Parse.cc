@@ -367,7 +367,12 @@ void ParseXML::parse(char* filepath)
 							itmp=xNode4.nChildNode("param");
 							for(k=0; k<itmp; k++)
 							{ //get all items of param in system.core0.itlb--itlb
-								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) sys.core[i].itlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].itlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].itlb.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
 							}
 							itmp=xNode4.nChildNode("stat");
 							for(k=0; k<itmp; k++)
@@ -454,6 +459,9 @@ void ParseXML::parse(char* filepath)
 								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
                                     sys.core[i].dtlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
                                 }
+								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].dtlb.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
 							}
 							itmp=xNode4.nChildNode("stat");
 							for(k=0; k<itmp; k++)
@@ -476,7 +484,12 @@ void ParseXML::parse(char* filepath)
 							itmp=xNode4.nChildNode("param");
 							for(k=0; k<itmp; k++)
 							{ //get all items of param in system.core0.stlb--stlb
-								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) sys.core[i].stlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].stlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].stlb.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
 							}
 							itmp=xNode4.nChildNode("stat");
 							for(k=0; k<itmp; k++)
@@ -1594,6 +1607,7 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].predictor.predictor_accesses=1;
 		//system.core?.itlb
 		sys.core[i].itlb.number_entries=1;
+		sys.core[i].itlb.number_assoc=1;
 		sys.core[i].itlb.total_hits=1;
 		sys.core[i].itlb.total_accesses=1;
 		sys.core[i].itlb.total_misses=1;
@@ -1615,6 +1629,7 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].icache.prefetch_buffer_hits=1;
 		//system.core?.dtlb
 		sys.core[i].dtlb.number_entries=1;
+		sys.core[i].dtlb.number_assoc=1;
 		sys.core[i].dtlb.total_accesses=1;
 		sys.core[i].dtlb.read_accesses=1;
 		sys.core[i].dtlb.write_accesses=1;
@@ -1626,6 +1641,7 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].dtlb.total_misses=1;
 
 		sys.core[i].stlb.number_entries=1;
+		sys.core[i].stlb.number_assoc=1;
 		sys.core[i].stlb.total_accesses=1;
 		sys.core[i].stlb.read_accesses=1;
 		sys.core[i].stlb.write_accesses=1;
