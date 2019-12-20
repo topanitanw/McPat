@@ -451,7 +451,9 @@ void ParseXML::parse(char* filepath)
 							itmp=xNode4.nChildNode("param");
 							for(k=0; k<itmp; k++)
 							{ //get all items of param in system.core0.dtlb--dtlb
-								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) sys.core[i].dtlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+								if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].dtlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
 							}
 							itmp=xNode4.nChildNode("stat");
 							for(k=0; k<itmp; k++)

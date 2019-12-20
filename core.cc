@@ -1008,6 +1008,27 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  area.set_area(area.get_area()+ dtlb->local_result.area);
 	  //output_data_csv(dtlb.tlb.local_result);
 
+	  tag							   = XML->sys.virtual_address_width- int(floor(log2(XML->sys.virtual_memory_page_size))) +int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))+ EXTRA_TAG_BITS;
+	  data							   = XML->sys.physical_address_width- int(floor(log2(XML->sys.virtual_memory_page_size)));
+	  interface_ip.specific_tag        = 1;
+	  interface_ip.tag_w               = tag;
+	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
+	  interface_ip.cache_sz            = XML->sys.core[ithCore].stlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
+	  interface_ip.assoc               = 0;
+	  interface_ip.nbanks              = 1;
+	  interface_ip.out_w               = interface_ip.line_sz*8;
+	  interface_ip.access_mode         = 0;
+	  interface_ip.throughput          = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[4]/clockRate;
+	  interface_ip.latency             = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[5]/clockRate;
+	  interface_ip.obj_func_dyn_energy = 0;
+	  interface_ip.obj_func_dyn_power  = 0;
+	  interface_ip.obj_func_leak_power = 0;
+	  interface_ip.obj_func_cycle_t    = 1;
+	  interface_ip.num_rw_ports    = 0;
+	  interface_ip.num_rd_ports    = 0;
+	  interface_ip.num_wr_ports    = XML->sys.core[ithCore].memory_ports;
+	  interface_ip.num_se_rd_ports = 0;
+	  interface_ip.num_search_ports = XML->sys.core[ithCore].memory_ports;
 	  stlb = new ArrayST(&interface_ip, "STLB", Core_device, coredynp.opt_local, coredynp.core_ty);
 	  stlb->area.set_area(stlb->area.get_area()+ stlb->local_result.area);
 	  area.set_area(area.get_area()+ stlb->local_result.area);
