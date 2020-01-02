@@ -479,34 +479,123 @@ void ParseXML::parse(char* filepath)
 
 							}
 						}
-						if (strcmp(xNode4.getAttribute("name"),"stlb")==0)
-						{//find system.core0.stlb
-							itmp=xNode4.nChildNode("param");
-							for(k=0; k<itmp; k++)
-							{ //get all items of param in system.core0.stlb--stlb
+                        if (strcmp(xNode4.getAttribute("name"),"stlb")==0)
+                        {//find system.core0.stlb
+                            sys.core[i].stlb.exist=true;
+                            itmp=xNode4.nChildNode("param");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of param in system.core0.stlb--stlb
                                 if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
                                     sys.core[i].stlb.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
                                 }
                                 if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
                                     sys.core[i].stlb.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
                                 }
-							}
-							itmp=xNode4.nChildNode("stat");
-							for(k=0; k<itmp; k++)
-							{ //get all items of stat in stlb
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.core[i].stlb.total_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.core[i].stlb.read_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.core[i].stlb.write_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_hits")==0) {sys.core[i].stlb.read_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_hits")==0) {sys.core[i].stlb.write_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_misses")==0) {sys.core[i].stlb.read_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_misses")==0) {sys.core[i].stlb.write_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_hits")==0) {sys.core[i].stlb.total_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_misses")==0) {sys.core[i].stlb.total_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
-								if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"conflicts")==0) {sys.core[i].stlb.conflicts=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                            }
+                            itmp=xNode4.nChildNode("stat");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of stat in stlb
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.core[i].stlb.total_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.core[i].stlb.read_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.core[i].stlb.write_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_hits")==0) {sys.core[i].stlb.read_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_hits")==0) {sys.core[i].stlb.write_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_misses")==0) {sys.core[i].stlb.read_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_misses")==0) {sys.core[i].stlb.write_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_hits")==0) {sys.core[i].stlb.total_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_misses")==0) {sys.core[i].stlb.total_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"conflicts")==0) {sys.core[i].stlb.conflicts=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
 
-							}
-						}
+                            }
+                        }
+                        if (strcmp(xNode4.getAttribute("name"),"pml4")==0)
+                        {//find system.core0.stlb
+                            sys.core[i].pml4.exist=true;
+
+                            itmp=xNode4.nChildNode("param");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of param in system.core0.pml4--pml4
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].pml4.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].pml4.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                            }
+                            itmp=xNode4.nChildNode("stat");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of stat in pml4
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.core[i].pml4.total_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.core[i].pml4.read_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.core[i].pml4.write_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_hits")==0) {sys.core[i].pml4.read_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_hits")==0) {sys.core[i].pml4.write_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_misses")==0) {sys.core[i].pml4.read_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_misses")==0) {sys.core[i].pml4.write_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_hits")==0) {sys.core[i].pml4.total_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_misses")==0) {sys.core[i].pml4.total_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"conflicts")==0) {sys.core[i].pml4.conflicts=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+
+                            }
+                        }
+                        if (strcmp(xNode4.getAttribute("name"),"pdp")==0)
+                        {//find system.core0.pdp
+                            sys.core[i].pdp.exist=true;
+                            itmp=xNode4.nChildNode("param");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of param in system.core0.pdp--pdp
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].pdp.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].pdp.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                            }
+                            itmp=xNode4.nChildNode("stat");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of stat in pdp
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.core[i].pdp.total_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.core[i].pdp.read_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.core[i].pdp.write_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_hits")==0) {sys.core[i].pdp.read_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_hits")==0) {sys.core[i].pdp.write_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_misses")==0) {sys.core[i].pdp.read_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_misses")==0) {sys.core[i].pdp.write_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_hits")==0) {sys.core[i].pdp.total_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_misses")==0) {sys.core[i].pdp.total_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"conflicts")==0) {sys.core[i].pdp.conflicts=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+
+                            }
+                        }
+                        if (strcmp(xNode4.getAttribute("name"),"pde")==0)
+                        {//find system.core0.pde
+                            sys.core[i].pde.exist=true;
+                            itmp=xNode4.nChildNode("param");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of param in system.core0.pde--pde
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_entries")==0) {
+                                    sys.core[i].pde.number_entries=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                                if (strcmp(xNode4.getChildNode("param",k).getAttribute("name"),"number_assoc")==0) {
+                                    sys.core[i].pde.number_assoc=atoi(xNode4.getChildNode("param",k).getAttribute("value"));
+                                }
+                            }
+                            itmp=xNode4.nChildNode("stat");
+                            for(k=0; k<itmp; k++)
+                            { //get all items of stat in pde
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.core[i].pde.total_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.core[i].pde.read_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.core[i].pde.write_accesses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_hits")==0) {sys.core[i].pde.read_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_hits")==0) {sys.core[i].pde.write_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"read_misses")==0) {sys.core[i].pde.read_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"write_misses")==0) {sys.core[i].pde.write_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_hits")==0) {sys.core[i].pde.total_hits=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"total_misses")==0) {sys.core[i].pde.total_misses=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+                                if (strcmp(xNode4.getChildNode("stat",k).getAttribute("name"),"conflicts")==0) {sys.core[i].pde.conflicts=atof(xNode4.getChildNode("stat",k).getAttribute("value"));continue;}
+
+                            }
+                        }
 						if (strcmp(xNode4.getAttribute("name"),"dcache")==0)
 						{//find system.core0.dcache
 							itmp=xNode4.nChildNode("param");
@@ -1628,6 +1717,7 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].icache.prefetch_buffer_reads=1;
 		sys.core[i].icache.prefetch_buffer_hits=1;
 		//system.core?.dtlb
+		sys.core[i].dtlb.exist=true;
 		sys.core[i].dtlb.number_entries=1;
 		sys.core[i].dtlb.number_assoc=1;
 		sys.core[i].dtlb.total_accesses=1;
@@ -1640,17 +1730,10 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].dtlb.total_hits=1;
 		sys.core[i].dtlb.total_misses=1;
 
-		sys.core[i].stlb.number_entries=1;
-		sys.core[i].stlb.number_assoc=1;
-		sys.core[i].stlb.total_accesses=1;
-		sys.core[i].stlb.read_accesses=1;
-		sys.core[i].stlb.write_accesses=1;
-		sys.core[i].stlb.write_hits=1;
-		sys.core[i].stlb.read_hits=1;
-		sys.core[i].stlb.read_misses=1;
-		sys.core[i].stlb.write_misses=1;
-		sys.core[i].stlb.total_hits=1;
-		sys.core[i].stlb.total_misses=1;
+        this->initDTlb(&(sys.core[i].stlb));
+        this->initDTlb(&(sys.core[i].pml4));
+        this->initDTlb(&(sys.core[i].pdp));
+        this->initDTlb(&(sys.core[i].pde));
 
 		//system.core?.dcache
 		for (j=0; j<20; j++) sys.core[i].dcache.dcache_config[j]=1;
@@ -1904,3 +1987,20 @@ void ParseXML::initialize() //Initialize all
 	sys.flashc.duty_cycle =1;
 	sys.flashc.total_load_perc=1;
 }
+
+void ParseXML::initDTlb(dtlb_systemcore* dev)
+{
+    dev->exist = false;
+    dev->number_entries=1;
+    dev->number_assoc=1;
+    dev->total_accesses=1;
+    dev->read_accesses=1;
+    dev->write_accesses=1;
+    dev->write_hits=1;
+    dev->read_hits=1;
+    dev->read_misses=1;
+    dev->write_misses=1;
+    dev->total_hits=1;
+    dev->total_misses=1;
+}
+

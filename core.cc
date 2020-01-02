@@ -943,9 +943,12 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
  itlb(0),
  dtlb(0),
  stlb(0),
+ pml4(0),
+ pdp(0),
+ pde(0),
  exist(exist_)
 {
-	  if (!exist) return;
+      if (!exist) return;
 	  int  tag, data;
 	  bool debug= false;
 
@@ -956,6 +959,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.pure_ram            = false;
 	  interface_ip.specific_tag        = 1;
 	  //Itlb TLBs are partioned among threads according to Nigara and Nehalem
+      // extra_tag_bits = 5; defined in the const.h in cacti
 	  tag							   = XML->sys.virtual_address_width- int(floor(log2(XML->sys.virtual_memory_page_size))) + int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))+ EXTRA_TAG_BITS;
 	  data							   = XML->sys.physical_address_width- int(floor(log2(XML->sys.virtual_memory_page_size)));
 	  interface_ip.tag_w               = tag;
@@ -987,10 +991,13 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.specific_tag        = 1;
 	  interface_ip.tag_w               = tag;
 	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
+      // cache_sz in bytes
 	  interface_ip.cache_sz            = XML->sys.core[ithCore].dtlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
 	  interface_ip.assoc               = XML->sys.core[ithCore].dtlb.number_assoc;
 	  interface_ip.nbanks              = 1;
+      // out_w in bits
 	  interface_ip.out_w               = interface_ip.line_sz*8;
+      // access_mode = 0 normal, 1 seq, 2 fast defined in cacti_interface.h
 	  interface_ip.access_mode         = 0;
 	  interface_ip.throughput          = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[4]/clockRate;
 	  interface_ip.latency             = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[5]/clockRate;
@@ -1000,6 +1007,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  interface_ip.obj_func_cycle_t    = 1;
 	  interface_ip.num_rw_ports    = 0;
 	  interface_ip.num_rd_ports    = 0;
+      // num_wr_ports = write only port
 	  interface_ip.num_wr_ports    = XML->sys.core[ithCore].memory_ports;
 	  interface_ip.num_se_rd_ports = 0;
 	  interface_ip.num_search_ports = XML->sys.core[ithCore].memory_ports;
@@ -1008,30 +1016,62 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  area.set_area(area.get_area()+ dtlb->local_result.area);
 	  //output_data_csv(dtlb.tlb.local_result);
 
-	  tag							   = XML->sys.virtual_address_width- int(floor(log2(XML->sys.virtual_memory_page_size))) +int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))+ EXTRA_TAG_BITS;
-	  data							   = XML->sys.physical_address_width- int(floor(log2(XML->sys.virtual_memory_page_size)));
-	  interface_ip.specific_tag        = 1;
-	  interface_ip.tag_w               = tag;
-	  interface_ip.line_sz             = int(ceil(data/8.0));//int(ceil(pow(2.0,ceil(log2(data)))/8.0));
-	  interface_ip.cache_sz            = XML->sys.core[ithCore].stlb.number_entries*interface_ip.line_sz;//*XML->sys.core[ithCore].number_hardware_threads;
-	  interface_ip.assoc               = 8;//XML->sys.core[ithCore].stlb.number_assoc;
-	  interface_ip.nbanks              = 1;
-	  interface_ip.out_w               = interface_ip.line_sz*8;
-	  interface_ip.access_mode         = 0;
-	  interface_ip.throughput          = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[4]/clockRate;
-	  interface_ip.latency             = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[5]/clockRate;
-	  interface_ip.obj_func_dyn_energy = 0;
-	  interface_ip.obj_func_dyn_power  = 0;
-	  interface_ip.obj_func_leak_power = 0;
-	  interface_ip.obj_func_cycle_t    = 1;
-	  interface_ip.num_rw_ports    = 0;
-	  interface_ip.num_rd_ports    = 0;
-	  interface_ip.num_wr_ports    = XML->sys.core[ithCore].memory_ports;
-	  interface_ip.num_se_rd_ports = 0;
-	  interface_ip.num_search_ports = XML->sys.core[ithCore].memory_ports;
-	  stlb = new ArrayST(&interface_ip, "STLB", Core_device, coredynp.opt_local, coredynp.core_ty);
-	  stlb->area.set_area(stlb->area.get_area()+ stlb->local_result.area);
-	  area.set_area(area.get_area()+ stlb->local_result.area);
+      cout << "[HACK] line size: " << interface_ip.line_sz << endl;
+      cout << "[HACK] tag: " << tag << endl;
+      cout << "[HACK] data: " << data << endl;
+      cout << "[HACK] throughput: " << interface_ip.throughput << endl;
+      cout << "[HACK] latency: " << interface_ip.latency << endl;
+      cout << "[HACK] search_ports: " << interface_ip.num_search_ports << endl;
+      cout << "[HACK] wr_ports: " << interface_ip.num_wr_ports << endl;
+      if(XML->sys.core[ithCore].stlb.exist) {
+          tag							   = XML->sys.virtual_address_width- int(floor(log2(XML->sys.virtual_memory_page_size))) +int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))+ EXTRA_TAG_BITS;
+          data							   = XML->sys.physical_address_width- int(floor(log2(XML->sys.virtual_memory_page_size)));
+          interface_ip.specific_tag        = 1;
+          interface_ip.tag_w               = tag;
+          interface_ip.line_sz             = 8.0;
+          interface_ip.cache_sz            = XML->sys.core[ithCore].stlb.number_entries*8.0;
+          interface_ip.assoc               = 8;//XML->sys.core[ithCore].stlb.number_assoc;
+          interface_ip.nbanks              = 1;
+          interface_ip.out_w               = interface_ip.line_sz*8;
+          interface_ip.access_mode         = 0;
+          interface_ip.throughput          = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[4]/clockRate;
+          interface_ip.latency             = debug?1.0/clockRate:XML->sys.core[ithCore].dcache.dcache_config[5]/clockRate;
+          interface_ip.obj_func_dyn_energy = 0;
+          interface_ip.obj_func_dyn_power  = 0;
+          interface_ip.obj_func_leak_power = 0;
+          interface_ip.obj_func_cycle_t    = 1;
+          interface_ip.num_rw_ports    = 0;
+          interface_ip.num_rd_ports    = 0;
+          interface_ip.num_wr_ports    = XML->sys.core[ithCore].memory_ports;
+          interface_ip.num_se_rd_ports = 0;
+          interface_ip.num_search_ports = XML->sys.core[ithCore].memory_ports;
+          stlb = new ArrayST(&interface_ip, "STLB", Core_device, coredynp.opt_local, coredynp.core_ty);
+          stlb->area.set_area(stlb->area.get_area()+ stlb->local_result.area);
+          area.set_area(area.get_area()+ stlb->local_result.area);
+      }
+
+      if(XML->sys.core[ithCore].pml4.exist) {
+          // fully associative
+          interface_ip.cache_sz            = XML->sys.core[ithCore].pml4.number_entries*interface_ip.line_sz;
+          interface_ip.assoc               = 0;
+          pml4 = new ArrayST(&interface_ip, "PML4", Core_device, coredynp.opt_local, coredynp.core_ty);
+          pml4->area.set_area(pml4->area.get_area()+ pml4->local_result.area);
+          area.set_area(area.get_area()+ pml4->local_result.area);
+      }
+
+      if(XML->sys.core[ithCore].pdp.exist) {
+          interface_ip.cache_sz            = XML->sys.core[ithCore].pdp.number_entries*interface_ip.line_sz;
+          pdp = new ArrayST(&interface_ip, "PDP", Core_device, coredynp.opt_local, coredynp.core_ty);
+          pdp->area.set_area(pdp->area.get_area()+ pdp->local_result.area);
+          area.set_area(area.get_area()+ pdp->local_result.area);
+      }
+
+      if(XML->sys.core[ithCore].pde.exist) {
+          interface_ip.cache_sz            = XML->sys.core[ithCore].pde.number_entries*interface_ip.line_sz;
+          pde = new ArrayST(&interface_ip, "PDE", Core_device, coredynp.opt_local, coredynp.core_ty);
+          pde->area.set_area(pde->area.get_area()+ pde->local_result.area);
+          area.set_area(area.get_area()+ pde->local_result.area);
+      }
 }
 
 RegFU::RegFU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_,bool exist_)
@@ -3514,92 +3554,143 @@ void LoadStoreU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 
 }
 
+void MemManU::computeEnergyDev(ArrayST* dev, bool is_tdp,
+                               double total_accesses, double total_misses)
+{
+    if(!dev) return;
+    if (is_tdp)
+    { //init stats for Peak
+        dev->stats_t.readAc.access  = dev->l_ip.num_search_ports*coredynp.IFU_duty_cycle;
+        dev->stats_t.readAc.miss    = 0;
+        dev->stats_t.readAc.hit     = dev->stats_t.readAc.access - dev->stats_t.readAc.miss;
+        dev->tdp_stats = dev->stats_t;
+    } else { //init stats for Runtime Dynamic (RTP)
+        dev->stats_t.readAc.access  = total_accesses;
+        dev->stats_t.readAc.miss    = total_misses;
+        dev->stats_t.readAc.hit     = dev->stats_t.readAc.access - dev->stats_t.readAc.miss;
+        dev->rtp_stats = dev->stats_t;
+    }
+    dev->power_t.reset();
+    VAR(dev->local_result.power.searchOp.dynamic);
+    dev->power_t.readOp.dynamic +=  dev->stats_t.readAc.access*dev->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
+        +dev->stats_t.readAc.miss*dev->local_result.power.writeOp.dynamic;
+
+    if (is_tdp) {
+        dev->power = dev->power_t + dev->local_result.power * pppm_lkg;
+        power = power + dev->power;
+    } else {
+        dev->rt_power = dev->power_t + dev->local_result.power *pppm_lkg;
+        rt_power = rt_power + dev->rt_power;
+    }
+}
+
 void MemManU::computeEnergy(bool is_tdp)
 {
 
 	if (!exist) return;
-	if (is_tdp)
-    {
-    	//init stats for Peak
-    	itlb->stats_t.readAc.access  = itlb->l_ip.num_search_ports*coredynp.IFU_duty_cycle;
-    	itlb->stats_t.readAc.miss    = 0;
-    	itlb->stats_t.readAc.hit     = itlb->stats_t.readAc.access - itlb->stats_t.readAc.miss;
-    	itlb->tdp_stats = itlb->stats_t;
+    this->computeEnergyDev(itlb, is_tdp,
+                           XML->sys.core[ithCore].itlb.total_accesses,
+                           XML->sys.core[ithCore].itlb.total_misses);
+    this->computeEnergyDev(dtlb, is_tdp,
+                           XML->sys.core[ithCore].dtlb.total_accesses,
+                           XML->sys.core[ithCore].dtlb.total_misses);
+    this->computeEnergyDev(stlb, is_tdp,
+                           XML->sys.core[ithCore].stlb.total_accesses,
+                           XML->sys.core[ithCore].stlb.total_misses);
+    this->computeEnergyDev(pml4, is_tdp,
+                           XML->sys.core[ithCore].pml4.total_accesses,
+                           XML->sys.core[ithCore].pml4.total_misses);
+    this->computeEnergyDev(pdp, is_tdp,
+                           XML->sys.core[ithCore].pdp.total_accesses,
+                           XML->sys.core[ithCore].pdp.total_misses);
+    this->computeEnergyDev(pde, is_tdp,
+                           XML->sys.core[ithCore].pde.total_accesses,
+                           XML->sys.core[ithCore].pde.total_misses);
 
-    	dtlb->stats_t.readAc.access  = dtlb->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
-    	dtlb->stats_t.readAc.miss    = 0;
-    	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
-    	dtlb->tdp_stats = dtlb->stats_t;
+	// if (is_tdp)
+    // {
+    // 	//init stats for Peak
+    // 	itlb->stats_t.readAc.access  = itlb->l_ip.num_search_ports*coredynp.IFU_duty_cycle;
+    // 	itlb->stats_t.readAc.miss    = 0;
+    // 	itlb->stats_t.readAc.hit     = itlb->stats_t.readAc.access - itlb->stats_t.readAc.miss;
+    // 	itlb->tdp_stats = itlb->stats_t;
 
-        if(stlb) {
-            stlb->stats_t.readAc.access  = stlb->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
-            stlb->stats_t.readAc.miss    = 0;
-            stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
-            stlb->tdp_stats = stlb->stats_t;
-        }
-     }
-    else
-    {
-    	//init stats for Runtime Dynamic (RTP)
-    	itlb->stats_t.readAc.access  = XML->sys.core[ithCore].itlb.total_accesses;
-    	itlb->stats_t.readAc.miss    = XML->sys.core[ithCore].itlb.total_misses;
-    	itlb->stats_t.readAc.hit     = itlb->stats_t.readAc.access - itlb->stats_t.readAc.miss;
-    	itlb->rtp_stats = itlb->stats_t;
+    // 	dtlb->stats_t.readAc.access  = dtlb->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+    // 	dtlb->stats_t.readAc.miss    = 0;
+    // 	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
+    // 	dtlb->tdp_stats = dtlb->stats_t;
 
-    	dtlb->stats_t.readAc.access  = XML->sys.core[ithCore].dtlb.total_accesses;
-    	dtlb->stats_t.readAc.miss    = XML->sys.core[ithCore].dtlb.total_misses;
-    	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
-    	dtlb->rtp_stats = dtlb->stats_t;
+    //     stlb->stats_t.readAc.access  = stlb->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+    //     stlb->stats_t.readAc.miss    = 0;
+    //     stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
+    //     stlb->tdp_stats = stlb->stats_t;
 
-        if(stlb) {
-            stlb->stats_t.readAc.access  = XML->sys.core[ithCore].stlb.total_accesses;
-            stlb->stats_t.readAc.miss    = XML->sys.core[ithCore].stlb.total_misses;
-            stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
-            stlb->rtp_stats = stlb->stats_t;
-        }
-    }
+    //     pml4->stats_t.readAc.access  = pml4->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+    //     pml4->stats_t.readAc.miss    = 0;
+    //     pml4->stats_t.readAc.hit     = pml4->stats_t.readAc.access - pml4->stats_t.readAc.miss;
+    //     pml4->tdp_stats = pml4->stats_t;
 
-    itlb->power_t.reset();
-    dtlb->power_t.reset();
-    if(stlb) {
-        stlb->power_t.reset();
-    }
-    VAR(itlb->local_result.power.searchOp.dynamic)
-    VAR(dtlb->local_result.power.searchOp.dynamic)
-	itlb->power_t.readOp.dynamic +=  itlb->stats_t.readAc.access*itlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
-	                      +itlb->stats_t.readAc.miss*itlb->local_result.power.writeOp.dynamic;
-	dtlb->power_t.readOp.dynamic +=  dtlb->stats_t.readAc.access*dtlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
-	                      +dtlb->stats_t.readAc.miss*dtlb->local_result.power.writeOp.dynamic;
-    if(stlb) {
-        stlb->power_t.readOp.dynamic +=  stlb->stats_t.readAc.access*stlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
-            +stlb->stats_t.readAc.miss*stlb->local_result.power.writeOp.dynamic;
-    }
+    //     pdp->stats_t.readAc.access  = pdp->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+    //     pdp->stats_t.readAc.miss    = 0;
+    //     pdp->stats_t.readAc.hit     = pdp->stats_t.readAc.access - pdp->stats_t.readAc.miss;
+    //     pdp->tdp_stats = pdp->stats_t;
 
-    if (is_tdp)
-    {
-        itlb->power = itlb->power_t + itlb->local_result.power *pppm_lkg;
-        dtlb->power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
-        power = power + itlb->power + dtlb->power;
-        if(stlb) {
-            stlb->power = stlb->power_t + stlb->local_result.power *pppm_lkg;
-            power = power + stlb->power;
-        }
-    }
-    else
-    {
-        itlb->rt_power = itlb->power_t + itlb->local_result.power *pppm_lkg;
-        dtlb->rt_power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
-        rt_power = rt_power + itlb->rt_power + dtlb->rt_power;
-        if(stlb) {
-            stlb->rt_power = stlb->power_t + stlb->local_result.power *pppm_lkg;
-            rt_power = rt_power + stlb->rt_power;
-        }
-    }
+    //     pde->stats_t.readAc.access  = pde->l_ip.num_search_ports*coredynp.LSU_duty_cycle;
+    //     pde->stats_t.readAc.miss    = 0;
+    //     pde->stats_t.readAc.hit     = pde->stats_t.readAc.access - pde->stats_t.readAc.miss;
+    //     pde->tdp_stats = pde->stats_t;
+    //  }
+    // else
+    // {
+    // 	//init stats for Runtime Dynamic (RTP)
+    // 	itlb->stats_t.readAc.access  = XML->sys.core[ithCore].itlb.total_accesses;
+    // 	itlb->stats_t.readAc.miss    = XML->sys.core[ithCore].itlb.total_misses;
+    // 	itlb->stats_t.readAc.hit     = itlb->stats_t.readAc.access - itlb->stats_t.readAc.miss;
+    // 	itlb->rtp_stats = itlb->stats_t;
+
+    // 	dtlb->stats_t.readAc.access  = XML->sys.core[ithCore].dtlb.total_accesses;
+    // 	dtlb->stats_t.readAc.miss    = XML->sys.core[ithCore].dtlb.total_misses;
+    // 	dtlb->stats_t.readAc.hit     = dtlb->stats_t.readAc.access - dtlb->stats_t.readAc.miss;
+    // 	dtlb->rtp_stats = dtlb->stats_t;
+
+    //     stlb->stats_t.readAc.access  = XML->sys.core[ithCore].stlb.total_accesses;
+    //     stlb->stats_t.readAc.miss    = XML->sys.core[ithCore].stlb.total_misses;
+    //     stlb->stats_t.readAc.hit     = stlb->stats_t.readAc.access - stlb->stats_t.readAc.miss;
+    //     stlb->rtp_stats = stlb->stats_t;
+
+    // }
+
+    // itlb->power_t.reset();
+    // dtlb->power_t.reset();
+    // stlb->power_t.reset();
+    // VAR(itlb->local_result.power.searchOp.dynamic)
+    // VAR(dtlb->local_result.power.searchOp.dynamic)
+    // VAR(stlb->local_result.power.searchOp.dynamic)
+	// itlb->power_t.readOp.dynamic +=  itlb->stats_t.readAc.access*itlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
+	//                       +itlb->stats_t.readAc.miss*itlb->local_result.power.writeOp.dynamic;
+	// dtlb->power_t.readOp.dynamic +=  dtlb->stats_t.readAc.access*dtlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
+	//                       +dtlb->stats_t.readAc.miss*dtlb->local_result.power.writeOp.dynamic;
+    // stlb->power_t.readOp.dynamic +=  stlb->stats_t.readAc.access*stlb->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
+    //     +stlb->stats_t.readAc.miss*stlb->local_result.power.writeOp.dynamic;
+
+    // if (is_tdp)
+    // {
+    //     itlb->power = itlb->power_t + itlb->local_result.power *pppm_lkg;
+    //     dtlb->power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
+    //     stlb->power = stlb->power_t + stlb->local_result.power *pppm_lkg;
+    //     power = power + itlb->power + dtlb->power + stlb->power;
+    // } else {
+    //     itlb->rt_power = itlb->power_t + itlb->local_result.power *pppm_lkg;
+    //     dtlb->rt_power = dtlb->power_t + dtlb->local_result.power *pppm_lkg;
+    //     stlb->rt_power = stlb->power_t + stlb->local_result.power *pppm_lkg;
+    //     rt_power = rt_power + itlb->rt_power + dtlb->rt_power + stlb->rt_power;
+    // }
 }
 
-void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
+void MemManU::displayEnergyDev(ArrayST* dev, uint32_t indent,
+                               int plevel, bool is_tdp)
 {
-	if (!exist) return;
+    if(!dev) return;
 	string indent_str(indent, ' ');
 	string indent_str_next(indent+2, ' ');
 	bool long_channel = XML->sys.longer_channel_device;
@@ -3607,54 +3698,118 @@ void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 
 	if (is_tdp)
 	{
-		cout << indent_str << "Itlb:" << endl;
-		cout << indent_str_next << "Area = " << itlb->area.get_area()*1e-6<< " mm^2" << endl;
-		cout << indent_str_next << "Peak Dynamic = " << itlb->power.readOp.dynamic*clockRate << " W" << endl;
+		cout << indent_str << dev->name << ":" << endl;
+		cout << indent_str_next << "Area = " << dev->area.get_area()*1e-6<< " mm^2" << endl;
+		cout << indent_str_next << "Peak Dynamic = " << dev->power.readOp.dynamic*clockRate << " W" << endl;
 		cout << indent_str_next << "Subthreshold Leakage = "
-			<< (long_channel? itlb->power.readOp.longer_channel_leakage:itlb->power.readOp.leakage) <<" W" << endl;
+			<< (long_channel? dev->power.readOp.longer_channel_leakage:dev->power.readOp.leakage) <<" W" << endl;
 		if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-				<< (long_channel? itlb->power.readOp.power_gated_with_long_channel_leakage : itlb->power.readOp.power_gated_leakage)  << " W" << endl;
-		cout << indent_str_next << "Gate Leakage = " << itlb->power.readOp.gate_leakage << " W" << endl;
-		cout << indent_str_next << "Runtime Dynamic = " << itlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+				<< (long_channel? dev->power.readOp.power_gated_with_long_channel_leakage : dev->power.readOp.power_gated_leakage)  << " W" << endl;
+		cout << indent_str_next << "Gate Leakage = " << dev->power.readOp.gate_leakage << " W" << endl;
+		cout << indent_str_next << "Runtime Dynamic = " << dev->rt_power.readOp.dynamic/executionTime << " W" << endl;
 		cout <<endl;
-		cout << indent_str<< "Dtlb:" << endl;
-		cout << indent_str_next << "Area = " << dtlb->area.get_area()*1e-6  << " mm^2" << endl;
-		cout << indent_str_next << "Peak Dynamic = " << dtlb->power.readOp.dynamic*clockRate  << " W" << endl;
-		cout << indent_str_next << "Subthreshold Leakage = "
-			<< (long_channel? dtlb->power.readOp.longer_channel_leakage:dtlb->power.readOp.leakage)  << " W" << endl;
-		if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-				<< (long_channel? dtlb->power.readOp.power_gated_with_long_channel_leakage : dtlb->power.readOp.power_gated_leakage)  << " W" << endl;
-		cout << indent_str_next << "Gate Leakage = " << dtlb->power.readOp.gate_leakage  << " W" << endl;
-		cout << indent_str_next << "Runtime Dynamic = " << dtlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
-		cout <<endl;
+    } else {
+		cout << indent_str_next << dev->name << "    Peak Dynamic = " << dev->rt_power.readOp.dynamic*clockRate << " W" << endl;
+		cout << indent_str_next << dev->name << "    Subthreshold Leakage = " << dev->rt_power.readOp.leakage <<" W" << endl;
+		cout << indent_str_next << dev->name << "    Gate Leakage = " << dev->rt_power.readOp.gate_leakage << " W" << endl;
+    }
+}
 
-        if(stlb) {
-            cout << indent_str<< "Stlb:" << endl;
-            cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
-            cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
-            cout << indent_str_next << "Subthreshold Leakage = "
-                << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
-            if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-                << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
-            cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
-            cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
-            cout <<endl;
-        }
-	}
-	else
-	{
-		cout << indent_str_next << "Itlb    Peak Dynamic = " << itlb->rt_power.readOp.dynamic*clockRate << " W" << endl;
-		cout << indent_str_next << "Itlb    Subthreshold Leakage = " << itlb->rt_power.readOp.leakage <<" W" << endl;
-		cout << indent_str_next << "Itlb    Gate Leakage = " << itlb->rt_power.readOp.gate_leakage << " W" << endl;
-		cout << indent_str_next << "Dtlb   Peak Dynamic = " << dtlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
-		cout << indent_str_next << "Dtlb   Subthreshold Leakage = " << dtlb->rt_power.readOp.leakage  << " W" << endl;
-		cout << indent_str_next << "Dtlb   Gate Leakage = " << dtlb->rt_power.readOp.gate_leakage  << " W" << endl;
-        if(stlb) {
-            cout << indent_str_next << "Stlb   Peak Dynamic = " << stlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
-            cout << indent_str_next << "Stlb   Subthreshold Leakage = " << stlb->rt_power.readOp.leakage  << " W" << endl;
-            cout << indent_str_next << "Stlb   Gate Leakage = " << stlb->rt_power.readOp.gate_leakage  << " W" << endl;
-        }
-	}
+void MemManU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
+{
+	if (!exist) return;
+    this->displayEnergyDev(itlb, indent, plevel, is_tdp);
+    this->displayEnergyDev(dtlb, indent, plevel, is_tdp);
+    this->displayEnergyDev(stlb, indent, plevel, is_tdp);
+    this->displayEnergyDev(pml4, indent, plevel, is_tdp);
+    this->displayEnergyDev(pdp, indent, plevel, is_tdp);
+    this->displayEnergyDev(pde, indent, plevel, is_tdp);
+    return;
+	// string indent_str(indent, ' ');
+	// string indent_str_next(indent+2, ' ');
+	// bool long_channel = XML->sys.longer_channel_device;
+	// bool power_gating = XML->sys.power_gating;
+
+	// if (is_tdp)
+	// {
+	// 	cout << indent_str << "Itlb:" << endl;
+	// 	cout << indent_str_next << "Area = " << itlb->area.get_area()*1e-6<< " mm^2" << endl;
+	// 	cout << indent_str_next << "Peak Dynamic = " << itlb->power.readOp.dynamic*clockRate << " W" << endl;
+	// 	cout << indent_str_next << "Subthreshold Leakage = "
+	// 		<< (long_channel? itlb->power.readOp.longer_channel_leakage:itlb->power.readOp.leakage) <<" W" << endl;
+	// 	if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+	// 			<< (long_channel? itlb->power.readOp.power_gated_with_long_channel_leakage : itlb->power.readOp.power_gated_leakage)  << " W" << endl;
+	// 	cout << indent_str_next << "Gate Leakage = " << itlb->power.readOp.gate_leakage << " W" << endl;
+	// 	cout << indent_str_next << "Runtime Dynamic = " << itlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+	// 	cout <<endl;
+
+	// 	cout << indent_str<< "Dtlb:" << endl;
+	// 	cout << indent_str_next << "Area = " << dtlb->area.get_area()*1e-6  << " mm^2" << endl;
+	// 	cout << indent_str_next << "Peak Dynamic = " << dtlb->power.readOp.dynamic*clockRate  << " W" << endl;
+	// 	cout << indent_str_next << "Subthreshold Leakage = "
+	// 		<< (long_channel? dtlb->power.readOp.longer_channel_leakage:dtlb->power.readOp.leakage)  << " W" << endl;
+	// 	if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+	// 			<< (long_channel? dtlb->power.readOp.power_gated_with_long_channel_leakage : dtlb->power.readOp.power_gated_leakage)  << " W" << endl;
+	// 	cout << indent_str_next << "Gate Leakage = " << dtlb->power.readOp.gate_leakage  << " W" << endl;
+	// 	cout << indent_str_next << "Runtime Dynamic = " << dtlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+	// 	cout <<endl;
+
+    //     cout << indent_str<< "Stlb:" << endl;
+    //     cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
+    //     cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
+    //     cout << indent_str_next << "Subthreshold Leakage = "
+    //         << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
+    //     if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+    //         << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
+    //     cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
+    //     cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+    //     cout << endl;
+
+    //     cout << indent_str<< "Stlb:" << endl;
+    //     cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
+    //     cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
+    //     cout << indent_str_next << "Subthreshold Leakage = "
+    //         << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
+    //     if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+    //         << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
+    //     cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
+    //     cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+    //     cout << endl;
+
+    //     cout << indent_str<< "Stlb:" << endl;
+    //     cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
+    //     cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
+    //     cout << indent_str_next << "Subthreshold Leakage = "
+    //         << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
+    //     if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+    //         << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
+    //     cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
+    //     cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+    //     cout << endl;
+
+    //     cout << indent_str<< "Stlb:" << endl;
+    //     cout << indent_str_next << "Area = " << stlb->area.get_area()*1e-6  << " mm^2" << endl;
+    //     cout << indent_str_next << "Peak Dynamic = " << stlb->power.readOp.dynamic*clockRate  << " W" << endl;
+    //     cout << indent_str_next << "Subthreshold Leakage = "
+    //         << (long_channel? stlb->power.readOp.longer_channel_leakage : stlb->power.readOp.leakage)  << " W" << endl;
+    //     if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+    //         << (long_channel? stlb->power.readOp.power_gated_with_long_channel_leakage : stlb->power.readOp.power_gated_leakage)  << " W" << endl;
+    //     cout << indent_str_next << "Gate Leakage = " << stlb->power.readOp.gate_leakage  << " W" << endl;
+    //     cout << indent_str_next << "Runtime Dynamic = " << stlb->rt_power.readOp.dynamic/executionTime << " W" << endl;
+    //     cout << endl;
+	// }
+	// else
+	// {
+	// 	cout << indent_str_next << "Itlb    Peak Dynamic = " << itlb->rt_power.readOp.dynamic*clockRate << " W" << endl;
+	// 	cout << indent_str_next << "Itlb    Subthreshold Leakage = " << itlb->rt_power.readOp.leakage <<" W" << endl;
+	// 	cout << indent_str_next << "Itlb    Gate Leakage = " << itlb->rt_power.readOp.gate_leakage << " W" << endl;
+	// 	cout << indent_str_next << "Dtlb   Peak Dynamic = " << dtlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
+	// 	cout << indent_str_next << "Dtlb   Subthreshold Leakage = " << dtlb->rt_power.readOp.leakage  << " W" << endl;
+	// 	cout << indent_str_next << "Dtlb   Gate Leakage = " << dtlb->rt_power.readOp.gate_leakage  << " W" << endl;
+    //     cout << indent_str_next << "Stlb   Peak Dynamic = " << stlb->rt_power.readOp.dynamic*clockRate  << " W" << endl;
+    //     cout << indent_str_next << "Stlb   Subthreshold Leakage = " << stlb->rt_power.readOp.leakage  << " W" << endl;
+    //     cout << indent_str_next << "Stlb   Gate Leakage = " << stlb->rt_power.readOp.gate_leakage  << " W" << endl;
+	// }
 
 }
 
@@ -4325,6 +4480,9 @@ MemManU ::~MemManU(){
 	if(itlb) 	               {delete itlb; itlb = 0;}
     if(dtlb) 	               {delete dtlb; dtlb = 0;}
     if(stlb) 	               {delete stlb; stlb = 0;}
+    if(pml4) 	               {delete pml4; pml4 = 0;}
+    if(pdp) 	               {delete pdp; pdp = 0;}
+    if(pde) 	               {delete pde; pde = 0;}
 }
 
 RegFU ::~RegFU(){

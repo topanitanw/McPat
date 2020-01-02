@@ -66,6 +66,7 @@ ArrayST::ArrayST(const InputParameter *configure_interface,
 void ArrayST::compute_base_power()
     {
 	//l_ip.out_w               =l_ip.line_sz*8;
+    cout << "[HACK] " << this->name << " assoc: " << l_ip.assoc << endl;
     local_result=cacti_interface(&l_ip);
 	assert(local_result.cycle_time>0);
 	assert(local_result.access_time>0);

@@ -73,17 +73,17 @@ SharedCache::SharedCache(ParseXML* XML_interface, int ithCache_, InputParameter*
   debug           = false;
   is_default=true;//indication for default setup
   if (XML->sys.Embedded)
-  		{
-  		interface_ip.wt                  =Global_30;
-  		interface_ip.wire_is_mat_type = 0;
-  		interface_ip.wire_os_mat_type = 1;
-  		}
-  	else
-  		{
-  		interface_ip.wt                  =Global;
-  		interface_ip.wire_is_mat_type = 2;
-  		interface_ip.wire_os_mat_type = 2;
-  		}
+  {
+      interface_ip.wt                  =Global_30;
+      interface_ip.wire_is_mat_type = 0;
+      interface_ip.wire_os_mat_type = 1;
+  }
+  else
+  {
+      interface_ip.wt                  =Global;
+      interface_ip.wire_is_mat_type = 2;
+      interface_ip.wire_os_mat_type = 2;
+  }
   set_cache_param();
 
   //All lower level cache are physically indexed and tagged.

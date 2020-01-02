@@ -63,7 +63,7 @@ class ArrayST :public Component{
   virtual void optimize_array();
   virtual void compute_base_power();
   virtual ~ArrayST();
-  
+
   void leakage_feedback(double temperature);
 };
 

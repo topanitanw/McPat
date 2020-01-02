@@ -95,6 +95,7 @@ typedef struct{
 } icache_systemcore;
 typedef struct{
 	//params
+    bool exist;
 	int number_entries;
 	int number_assoc;
 	int cache_policy;//0 no write or write-though with non-write allocate;1 write-back with write-allocate
@@ -286,11 +287,14 @@ typedef struct{
 
 	//all subnodes at the level of system.core(0-n)
 	predictor_systemcore predictor;
-	itlb_systemcore itlb;
 	icache_systemcore icache;
+	dcache_systemcore dcache;
+	itlb_systemcore itlb;
 	dtlb_systemcore dtlb;
 	dtlb_systemcore stlb;
-	dcache_systemcore dcache;
+	dtlb_systemcore pml4;
+	dtlb_systemcore pdp;
+	dtlb_systemcore pde;
 	BTB_systemcore BTB;
 
 } system_core;
@@ -603,6 +607,8 @@ class ParseXML
 public:
 	void parse(char* filepath);
     void initialize();
+    void initDTlb(dtlb_systemcore* dev);
+
 public:
 	root_system sys;
 };

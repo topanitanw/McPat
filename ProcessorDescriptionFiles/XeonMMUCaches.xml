@@ -215,7 +215,7 @@
 			</component>
 			<component id="system.core0.itlb" name="itlb">
 				<param name="number_entries" value="128"/>
-				<param name="number_assoc" value="8"/>
+				<param name="number_assoc" value="4"/><!--dual threads-->
 				<stat name="total_accesses" value="20"/>
 				<stat name="total_misses" value="4"/>
 				<stat name="conflicts" value="1"/>
@@ -223,14 +223,40 @@
 				which is actually a replacement -->
 			</component>
 			<component id="system.core0.stlb" name="stlb">
-				<param name="number_entries" value="1536"/><!--dual threads-->
-				<param name="number_assoc" value="4"/>
+				<param name="number_entries" value="128"/><!--dual threads-->
+				<param name="number_assoc" value="8"/><!--dual threads-->
 				<stat name="total_accesses" value="123"/>
 				<stat name="total_misses" value="42"/>
 				<stat name="conflicts" value="13"/>
 				<!-- there is no write requests to itlb although writes happen to itlb after miss,
 				which is actually a replacement -->
-				<!-- the parameters are capacity,block_width, associativity, bank, throughput w.r.t. core clock, latency w.r.t. core clock,output_width, cache policy -->
+			</component>
+			<component id="system.core0.pml4" name="pml4">
+				<param name="number_entries" value="2"/><!--dual threads-->
+				<param name="number_assoc" value="0"/><!--dual threads-->
+				<stat name="total_accesses" value="123"/>
+				<stat name="total_misses" value="42"/>
+				<stat name="conflicts" value="13"/>
+				<!-- there is no write requests to itlb although writes happen to itlb after miss,
+				which is actually a replacement -->
+			</component>
+			<component id="system.core0.pdp" name="pdp">
+				<param name="number_entries" value="4"/><!--dual threads-->
+				<param name="number_assoc" value="0"/><!--dual threads-->
+				<stat name="total_accesses" value="123"/>
+				<stat name="total_misses" value="42"/>
+				<stat name="conflicts" value="13"/>
+				<!-- there is no write requests to itlb although writes happen to itlb after miss,
+				which is actually a replacement -->
+			</component>
+			<component id="system.core0.pde" name="pde">
+				<param name="number_entries" value="32"/><!--dual threads-->
+				<param name="number_assoc" value="0"/><!--dual threads-->
+				<stat name="total_accesses" value="123"/>
+				<stat name="total_misses" value="42"/>
+				<stat name="conflicts" value="13"/>
+				<!-- there is no write requests to itlb although writes happen to itlb after miss,
+				which is actually a replacement -->
 			</component>
 			<component id="system.core0.icache" name="icache">
 				<!-- there is no write requests to itlb although writes happen to it after miss,
@@ -246,7 +272,7 @@
 			</component>
 			<component id="system.core0.dtlb" name="dtlb">
 				<param name="number_entries" value="128"/><!--dual threads-->
-				<param name="number_assoc" value="4"/>
+				<param name="number_assoc" value="4"/><!--dual threads-->
 				<stat name="total_accesses" value="123"/>
 				<stat name="total_misses" value="42"/>
 				<stat name="conflicts" value="13"/>
@@ -298,7 +324,6 @@
 			    <!--0 cam based shadowed tag. 1 directory cache -->
 				<param name="Dir_config" value="1048576,16,16,1,2, 100"/>
 				<!-- the parameters are capacity,block_width, associativity,bank, throughput w.r.t. core clock, latency w.r.t. core clock,-->
-				<!-- the parameters are capacity,block_width, associativity, bank, throughput w.r.t. core clock, latency w.r.t. core clock,output_width, cache policy -->
 			    <param name="buffer_sizes" value="8, 8, 8, 8"/>
 				<!-- all the buffer related are optional -->
 			    <param name="clockrate" value="3400"/>

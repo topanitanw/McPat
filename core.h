@@ -173,12 +173,21 @@ class MemManU :public Component {
 	ArrayST * itlb;
 	ArrayST * dtlb;
 	ArrayST * stlb;
+	ArrayST * pml4;
+	ArrayST * pdp;
+	ArrayST * pde;
 	bool exist;
 
 	MemManU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
     void computeEnergy(bool is_tdp=true);
     void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
 	~MemManU();
+
+  private:
+    void computeEnergyDev(ArrayST* dev, bool is_tdp=true, \
+                          double total_accesses=0.0, double total_misses=0.0);
+    void displayEnergyDev(ArrayST* dev, uint32_t indent = 0,
+                          int plevel = 100, bool is_tdp=true);
 };
 
 class RegFU :public Component {
