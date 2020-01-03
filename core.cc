@@ -41,8 +41,20 @@
 #include <assert.h>
 #include "core.h"
 //#include "globalvar.h"
+#include <cstdio>
 
-#define VAR(v) cout << #v << " : " << std::to_string(v) << std::endl;
+// cout << #v << std::to_string(v); is not very helpful.
+// #define DEBUG
+
+#ifdef DEBUG
+#define VAR_STR(v)   cout << #v << " : " << v << endl;
+#define VAR_INT(v)   printf(#v " : %d\n", v);
+#define VAR_FLOAT(v) printf(#v " : %.3e\n", v);
+#else
+#define VAR_STR(v)
+#define VAR_INT(v)
+#define VAR_FLOAT(v)
+#endif
 
 InstFetchU::InstFetchU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_)
 :XML(XML_interface),
@@ -1016,6 +1028,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 	  area.set_area(area.get_area()+ dtlb->local_result.area);
 	  //output_data_csv(dtlb.tlb.local_result);
 
+#ifdef DEBUG
       cout << "[HACK] line size: " << interface_ip.line_sz << endl;
       cout << "[HACK] tag: " << tag << endl;
       cout << "[HACK] data: " << data << endl;
@@ -1023,6 +1036,8 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
       cout << "[HACK] latency: " << interface_ip.latency << endl;
       cout << "[HACK] search_ports: " << interface_ip.num_search_ports << endl;
       cout << "[HACK] wr_ports: " << interface_ip.num_wr_ports << endl;
+#endif
+
       if(XML->sys.core[ithCore].stlb.exist) {
           tag							   = XML->sys.virtual_address_width- int(floor(log2(XML->sys.virtual_memory_page_size))) +int(ceil(log2(XML->sys.core[ithCore].number_hardware_threads)))+ EXTRA_TAG_BITS;
           data							   = XML->sys.physical_address_width- int(floor(log2(XML->sys.virtual_memory_page_size)));
@@ -2254,9 +2269,9 @@ void InstFetchU::computeEnergy(bool is_tdp)
     // VAR(icache.missb->local_result.power.searchOp.dynamic)
     // VAR(icache.missb->stats_t.readAc.access)
     // VAR(icache.ifb->local_result.power.searchOp.dynamic)
-    VAR(icache.caches->stats_t.readAc.access)
-    VAR(icache.caches->stats_t.readAc.hit)
-    VAR(icache.caches->stats_t.readAc.miss)
+    VAR_FLOAT(icache.caches->stats_t.readAc.access)
+    VAR_FLOAT(icache.caches->stats_t.readAc.hit)
+    VAR_FLOAT(icache.caches->stats_t.readAc.miss)
     // cache
     icache.power_t.readOp.dynamic	+= (icache.caches->stats_t.readAc.hit*icache.caches->local_result.power.readOp.dynamic+
     		//icache.caches->stats_t.readAc.miss*icache.caches->local_result.tag_array2->power.readOp.dynamic+
@@ -3379,9 +3394,9 @@ void LoadStoreU::computeEnergy(bool is_tdp)
     //VAR(dcache.missb->local_result.power.searchOp.dynamic)
     //VAR(dcache.missb->stats_t.readAc.access)
     //VAR(dcache.ifb->local_result.power.searchOp.dynamic)
-    VAR(dcache.caches->stats_t.readAc.access)
-    VAR(dcache.caches->stats_t.readAc.miss)
-    VAR(dcache.caches->stats_t.readAc.hit)
+    VAR_FLOAT(dcache.caches->stats_t.readAc.access)
+    VAR_FLOAT(dcache.caches->stats_t.readAc.miss)
+    VAR_FLOAT(dcache.caches->stats_t.readAc.hit)
     // miss buffer
     dcache.power_t.readOp.dynamic	+=  dcache.missb->stats_t.readAc.access*dcache.missb->local_result.power.searchOp.dynamic +
             dcache.missb->stats_t.writeAc.access*dcache.missb->local_result.power.writeOp.dynamic;//each access to missb involves a CAM and a write
@@ -3571,7 +3586,7 @@ void MemManU::computeEnergyDev(ArrayST* dev, bool is_tdp,
         dev->rtp_stats = dev->stats_t;
     }
     dev->power_t.reset();
-    VAR(dev->local_result.power.searchOp.dynamic);
+
     dev->power_t.readOp.dynamic +=  dev->stats_t.readAc.access*dev->local_result.power.searchOp.dynamic//FA spent most power in tag, so use total access not hits
         +dev->stats_t.readAc.miss*dev->local_result.power.writeOp.dynamic;
 
@@ -3582,6 +3597,16 @@ void MemManU::computeEnergyDev(ArrayST* dev, bool is_tdp,
         dev->rt_power = dev->power_t + dev->local_result.power *pppm_lkg;
         rt_power = rt_power + dev->rt_power;
     }
+
+    VAR_STR(dev->name << endl);
+    VAR_INT(is_tdp);
+    VAR_FLOAT(coredynp.IFU_duty_cycle);
+    VAR_FLOAT(dev->stats_t.readAc.access);
+    VAR_FLOAT(dev->stats_t.readAc.miss);
+    VAR_FLOAT(dev->stats_t.readAc.hit);
+    VAR_FLOAT(dev->local_result.power.searchOp.dynamic);
+    VAR_FLOAT(dev->local_result.power.writeOp.dynamic);
+    VAR_FLOAT(dev->power_t.readOp.dynamic);
 }
 
 void MemManU::computeEnergy(bool is_tdp)

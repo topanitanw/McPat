@@ -42,44 +42,44 @@
 using namespace std;
 
 ArrayST::ArrayST(const InputParameter *configure_interface,
-		               string _name,
-		               enum Device_ty device_ty_,
-		               bool opt_local_,
-		               enum Core_type core_ty_,
-		               bool _is_default)
+                 string _name,
+                 enum Device_ty device_ty_,
+                 bool opt_local_,
+                 enum Core_type core_ty_,
+                 bool _is_default)
 :l_ip(*configure_interface),
  name(_name),
  device_ty(device_ty_),
  opt_local(opt_local_),
  core_ty(core_ty_),
  is_default(_is_default)
-    {
+{
 
-	if (l_ip.cache_sz<64) l_ip.cache_sz=64;
-	if (l_ip.power_gating && (l_ip.assoc==0)) {l_ip.power_gating = false;}
-	l_ip.error_checking();//not only do the error checking but also fill some missing parameters
-	optimize_array();
+    if (l_ip.cache_sz<64) l_ip.cache_sz=64;
+    if (l_ip.power_gating && (l_ip.assoc==0)) {l_ip.power_gating = false;}
+    l_ip.error_checking();//not only do the error checking but also fill some missing parameters
+    optimize_array();
 
 }
 
 
 void ArrayST::compute_base_power()
-    {
-	//l_ip.out_w               =l_ip.line_sz*8;
-    cout << "[HACK] " << this->name << " assoc: " << l_ip.assoc << endl;
+{
+    //l_ip.out_w               =l_ip.line_sz*8;
+    // cout << "[HACK] " << this->name << " assoc: " << l_ip.assoc << endl;
     local_result=cacti_interface(&l_ip);
-	assert(local_result.cycle_time>0);
-	assert(local_result.access_time>0);
-//    if (name == "Int FrontRAT")
-//    {
-//    	cout<<name<<endl;
-//    	l_ip.display_ip();
-//    	cout<<"cycle time dev = "<< l_ip.cycle_time_dev <<endl;
-//    	cout<<endl;
-//    	output_UCA(&local_result);
-//    	cout<<endl;
-//    }
-    }
+    assert(local_result.cycle_time>0);
+    assert(local_result.access_time>0);
+    //    if (name == "Int FrontRAT")
+    //    {
+    //    	cout<<name<<endl;
+    //    	l_ip.display_ip();
+    //    	cout<<"cycle time dev = "<< l_ip.cycle_time_dev <<endl;
+    //    	cout<<endl;
+    //    	output_UCA(&local_result);
+    //    	cout<<endl;
+    //    }
+}
 
 void ArrayST::optimize_array()
 {

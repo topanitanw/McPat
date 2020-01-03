@@ -222,6 +222,13 @@
 				<!-- there is no write requests to itlb although writes happen to itlb after miss,
 				which is actually a replacement -->
 			</component>
+			<component id="system.core0.dtlb" name="dtlb">
+				<param name="number_entries" value="128"/><!--dual threads-->
+				<param name="number_assoc" value="4"/><!--dual threads-->
+				<stat name="total_accesses" value="123"/>
+				<stat name="total_misses" value="42"/>
+				<stat name="conflicts" value="13"/>
+			</component>
 			<component id="system.core0.stlb" name="stlb">
 				<param name="number_entries" value="128"/><!--dual threads-->
 				<param name="number_assoc" value="8"/><!--dual threads-->
@@ -269,13 +276,6 @@
 				<stat name="read_accesses" value="17"/>
 				<stat name="read_misses" value="13"/>
 				<stat name="conflicts" value="2"/>
-			</component>
-			<component id="system.core0.dtlb" name="dtlb">
-				<param name="number_entries" value="128"/><!--dual threads-->
-				<param name="number_assoc" value="4"/><!--dual threads-->
-				<stat name="total_accesses" value="123"/>
-				<stat name="total_misses" value="42"/>
-				<stat name="conflicts" value="13"/>
 			</component>
 			<component id="system.core0.dcache" name="dcache">
 			        <!-- all the buffer related are optional -->
