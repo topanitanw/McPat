@@ -229,7 +229,8 @@
 			</component>
 			<component id="system.core0.stlb" name="stlb">
 				<param name="number_entries" value="1536"/>
-				<param name="number_assoc" value="12"/>
+                <!-- generally this must be 12 -->
+                <param name="number_assoc" value="8"/>
 				<stat name="total_accesses" value="46"/>
 				<stat name="total_misses" value="43"/>
 				<stat name="conflicts" value="0"/>
@@ -448,7 +449,7 @@
 			</component>
 			<component id="system.core1.stlb" name="stlb">
 				<param name="number_entries" value="1536"/>
-				<param name="number_assoc" value="12"/>
+				<param name="number_assoc" value="8"/>
 				<stat name="total_accesses" value="2279379"/>
 				<stat name="total_misses" value="2279379"/>
 				<stat name="conflicts" value="0"/>
@@ -667,7 +668,7 @@
 			</component>
 			<component id="system.core2.stlb" name="stlb">
 				<param name="number_entries" value="1536"/>
-				<param name="number_assoc" value="12"/>
+				<param name="number_assoc" value="8"/>
 				<stat name="total_accesses" value="2279325"/>
 				<stat name="total_misses" value="2279325"/>
 				<stat name="conflicts" value="0"/>
@@ -886,7 +887,7 @@
 			</component>
 			<component id="system.core3.stlb" name="stlb">
 				<param name="number_entries" value="1536"/>
-				<param name="number_assoc" value="12"/>
+				<param name="number_assoc" value="8"/>
 				<stat name="total_accesses" value="2279325"/>
 				<stat name="total_misses" value="2279325"/>
 				<stat name="conflicts" value="0"/>

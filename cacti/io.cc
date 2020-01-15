@@ -1500,11 +1500,13 @@ bool InputParameter::error_checking()
     {
       //fully_assoc = false;
       A = assoc;
-      if (is_pow2(A) == false)
-      {
-        cerr << "Associativity must be a power of 2" << endl;
-        return false;
-      }
+      // we found that it does not make sense as long as the number of sets 
+      // is still power of two.
+      // if (is_pow2(A) == false)
+      // {
+      //   cerr << "Associativity must be a power of 2, but it is " << A << endl;
+      //   return false;
+      // }
     }
   }
 

@@ -47,10 +47,12 @@
 // #define DEBUG
 
 #ifdef DEBUG
+#define DEBUGP(m)    cout << "[DEBUG] " << m << endl;
 #define VAR_STR(v)   cout << #v << " : " << v << endl;
 #define VAR_INT(v)   printf(#v " : %d\n", v);
 #define VAR_FLOAT(v) printf(#v " : %.3e\n", v);
 #else
+#define DEBUGP(m)
 #define VAR_STR(v)
 #define VAR_INT(v)
 #define VAR_FLOAT(v)
@@ -1045,7 +1047,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
           interface_ip.tag_w               = tag;
           interface_ip.line_sz             = 8.0;
           interface_ip.cache_sz            = XML->sys.core[ithCore].stlb.number_entries*8.0;
-          interface_ip.assoc               = 8;//XML->sys.core[ithCore].stlb.number_assoc;
+          interface_ip.assoc               = XML->sys.core[ithCore].stlb.number_assoc;
           interface_ip.nbanks              = 1;
           interface_ip.out_w               = interface_ip.line_sz*8;
           interface_ip.access_mode         = 0;
@@ -1060,6 +1062,8 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
           interface_ip.num_wr_ports    = XML->sys.core[ithCore].memory_ports;
           interface_ip.num_se_rd_ports = 0;
           interface_ip.num_search_ports = XML->sys.core[ithCore].memory_ports;
+          DEBUGP("stlb");
+          VAR_INT(interface_ip.assoc);
           stlb = new ArrayST(&interface_ip, "STLB", Core_device, coredynp.opt_local, coredynp.core_ty);
           stlb->area.set_area(stlb->area.get_area()+ stlb->local_result.area);
           area.set_area(area.get_area()+ stlb->local_result.area);
@@ -1069,13 +1073,14 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
           // fully associative
           interface_ip.cache_sz            = XML->sys.core[ithCore].pml4.number_entries*interface_ip.line_sz;
           interface_ip.assoc               = 0;
+          DEBUGP("pml4")
           pml4 = new ArrayST(&interface_ip, "PML4", Core_device, coredynp.opt_local, coredynp.core_ty);
           pml4->area.set_area(pml4->area.get_area()+ pml4->local_result.area);
           area.set_area(area.get_area()+ pml4->local_result.area);
       }
-
       if(XML->sys.core[ithCore].pdp.exist) {
           interface_ip.cache_sz            = XML->sys.core[ithCore].pdp.number_entries*interface_ip.line_sz;
+          DEBUGP("pdp")
           pdp = new ArrayST(&interface_ip, "PDP", Core_device, coredynp.opt_local, coredynp.core_ty);
           pdp->area.set_area(pdp->area.get_area()+ pdp->local_result.area);
           area.set_area(area.get_area()+ pdp->local_result.area);
@@ -1083,6 +1088,7 @@ MemManU::MemManU(ParseXML* XML_interface, int ithCore_, InputParameter* interfac
 
       if(XML->sys.core[ithCore].pde.exist) {
           interface_ip.cache_sz            = XML->sys.core[ithCore].pde.number_entries*interface_ip.line_sz;
+          DEBUGP("pde")
           pde = new ArrayST(&interface_ip, "PDE", Core_device, coredynp.opt_local, coredynp.core_ty);
           pde->area.set_area(pde->area.get_area()+ pde->local_result.area);
           area.set_area(area.get_area()+ pde->local_result.area);
@@ -3598,7 +3604,7 @@ void MemManU::computeEnergyDev(ArrayST* dev, bool is_tdp,
         rt_power = rt_power + dev->rt_power;
     }
 
-    VAR_STR(dev->name << endl);
+    VAR_STR(dev->name);
     VAR_INT(is_tdp);
     VAR_FLOAT(coredynp.IFU_duty_cycle);
     VAR_FLOAT(dev->stats_t.readAc.access);
@@ -3607,6 +3613,7 @@ void MemManU::computeEnergyDev(ArrayST* dev, bool is_tdp,
     VAR_FLOAT(dev->local_result.power.searchOp.dynamic);
     VAR_FLOAT(dev->local_result.power.writeOp.dynamic);
     VAR_FLOAT(dev->power_t.readOp.dynamic);
+    VAR_STR("--------------------------------")
 }
 
 void MemManU::computeEnergy(bool is_tdp)
