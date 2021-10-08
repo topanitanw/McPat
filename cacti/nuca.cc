@@ -44,7 +44,8 @@ int cont_stats[2 /*l2 or l3*/][5/* cores */][ROUTER_TYPES][7 /*banks*/][8 /* cyc
 
 Nuca::Nuca( TechnologyParameter::DeviceType *dt)
 {
-    deviceType = &(g_tp.peri_global);
+    // deviceType = &(g_tp.peri_global);
+    deviceType = dt;
     init_cont();
 }
 
