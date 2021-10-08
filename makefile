@@ -2,10 +2,13 @@ TAR = mcpat
 
 .PHONY: dbg opt depend clean clean_dbg clean_opt
 
-all: opt
+# opt has the deadlock issue when testing with the Xeon.xml
+all: dbg
 
+# Note that CXX and CC are changed with the -m64 flags, not -m32 since
+# MacOS does not support 32-bit programs.
 dbg: $(TAR).mk obj_dbg
-	@$(MAKE) TAG=dbg -C . -f $(TAR).mk
+	@$(MAKE) TAG=dbg -C . -f $(TAR).mk CXX="g++ -m64 -g" CC="gcc -m64 -g"
 
 opt: $(TAR).mk obj_opt
 	@$(MAKE) TAG=opt -C . -f $(TAR).mk
